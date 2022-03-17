@@ -64,6 +64,9 @@ namespace CollectibleBot.Data.Models
             return newPrice;
 		}
 
+        // The rarity multiplier is applied at the point of sale to the market value.
+        // For added randomness, Flux plays a role in generating the multiplier.
+        // The lower the Flux, the worse potential multiplier
         public int getRarityMult(int rarity)
         {
             Random rand = new();
@@ -73,6 +76,7 @@ namespace CollectibleBot.Data.Models
             return bonus;
         }
 
+        // Takes a rarity id and returns the correct string
         public string rarityToString(int rarity)
 		{
             switch (rarity)
@@ -92,19 +96,7 @@ namespace CollectibleBot.Data.Models
             return "Unknown";
 		}
 
-        public bool hasRarity(int rarity)
-		{
-            if (MinRarity == rarity)
-			{
-                return true;
-			}
-            if (MaxRarity == rarity)
-			{
-                return true;
-			}
-            return false;
-		}
-
+        // Sometimes it was essential to convert a Collectible to an Item when comparing market values or testing rarities.
         public static implicit operator Item(Collectible c) => new Item
         {
             Name = c.Name,

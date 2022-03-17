@@ -22,8 +22,10 @@ namespace CollectibleBot.Modules.Commands
 		[SlashCommand("inventory", "Bring up your inventory")]
 		public async Task inventory()
 		{
+			// Get user from DB
 			User user = await _util.getUserAsync(Context.User.Id.ToString(), Context.Guild.Id.ToString());
 
+			// Initialize the embed with basic info
 			EmbedBuilder embed = new EmbedBuilder
 			{
 				Author = new EmbedAuthorBuilder
@@ -37,6 +39,7 @@ namespace CollectibleBot.Modules.Commands
 				ThumbnailUrl = Context.User.GetAvatarUrl()
 			};
 
+			// Check if user has items
 			if (user.items.Count < 1)
 			{
 				embed.AddField(new EmbedFieldBuilder
@@ -48,6 +51,7 @@ namespace CollectibleBot.Modules.Commands
 				return;
 			}
 			
+			// Go through the user's inventory and get all necessary data to display
 			foreach (Item item in user.items)
 			{
 				Market market = await _util.getMarketValueAsync(item.Name, Context.Guild.Id.ToString());

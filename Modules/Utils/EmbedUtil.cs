@@ -11,6 +11,7 @@ namespace CollectibleBot.Modules.Utils
 {
 	class EmbedUtil
 	{
+		// Builds the embed to list all of the items and their basic information
 		public static EmbedBuilder ItemInfo(IInteractionContext Context, DbUtil util)
 		{
 			EmbedBuilder embed = new EmbedBuilder
@@ -22,8 +23,7 @@ namespace CollectibleBot.Modules.Utils
 				},
 				Title = $"{Context.Guild.Name}'s Collectibles",
 				Description = "These collectibles drop randomly within the server, " +
-				"When one drops, you can use ``/claim`` to claim the collectible. " +
-				"Otherwise, you can buy a collectible from someone else in the **Auction House**.\n" +
+				"You can buy collectibles from someone else in the **Auction House**.\n" +
 				"The Auction House can be accessed by using ``/market ah``."
 			};
 
@@ -55,6 +55,7 @@ namespace CollectibleBot.Modules.Utils
 
 		}
 
+		// Common code to build a field for item information
 		public static EmbedFieldBuilder MarketItemPreview(Collectible c, Item item, double price)
 		{
 			EmbedFieldBuilder field = new EmbedFieldBuilder
@@ -67,6 +68,7 @@ namespace CollectibleBot.Modules.Utils
 			return field;
 		}
 
+		// Builds an embed to notify that an item was sold to the Auction House
 		public static EmbedBuilder MarketSold(IInteractionContext Context, DbUtil _util, Item item, double price)
 		{
 			EmbedBuilder embed = new EmbedBuilder
@@ -87,6 +89,8 @@ namespace CollectibleBot.Modules.Utils
 			return embed;
 		}
 
+		// Builds an embed to ask if the user really wants to sell their item.
+		// Displays all necessary information pertaining to selling an item
 		public static EmbedBuilder MarketConfirmSell(IInteractionContext Context, DbUtil _util, Item item, double price)
 		{
 			EmbedBuilder embed = new EmbedBuilder
@@ -107,6 +111,7 @@ namespace CollectibleBot.Modules.Utils
 
 		}
 
+		// Builds an embed to notify that an item was Bought from the Auction House
 		public static EmbedBuilder MarketBought(IInteractionContext Context, DbUtil _util, Item item, double price)
 		{
 			EmbedBuilder embed = new EmbedBuilder
@@ -127,6 +132,8 @@ namespace CollectibleBot.Modules.Utils
 			return embed;
 		}
 
+		// Builds an embed to ask if the user really wants to buy this item.
+		// Displays all necessary information pertaining to buying an item.
 		public static EmbedBuilder MarketConfirmPurchase(IInteractionContext Context, DbUtil _util, Item item, User user, double price)
 		{
 			EmbedBuilder embed = new EmbedBuilder

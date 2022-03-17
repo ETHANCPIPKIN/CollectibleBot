@@ -9,28 +9,33 @@ using CollectibleBot.Data.Models;
 
 namespace CollectibleBot.Modules.Utils
 {
+	// DbUtil provides most of the accessors and shortcuts to pulling data from the database.
 	public class DbUtil
 	{
-		readonly DiscordSocketClient _client;
 		readonly BotDb _context;
 
-		public DbUtil(DiscordSocketClient client, BotDb ctx)
+		public DbUtil(BotDb ctx)
 		{
-			_client = client;
 			_context = ctx;
 		}
 
+		// This checks all facets of the DB to make sure that everything is in accordance with eachother.
+		// If there are issues while checking, these functions attempt to remedy them
 		public async Task checkDb(string guildId, string userId)
 		{
 			Console.WriteLine("Checking Auctions...");
 			await checkAuctions(guildId);
+
 			Console.WriteLine("Checking User...");
 			await checkUser(userId, guildId);
+
 			Console.WriteLine("Checking Markets...");
 			await checkMarkets(guildId);
+			
 			Console.WriteLine("Done!");
 		}
 
+		// Checks if an AuctionHouse exists for the guild, if not, then it will auto-fill one in.
 		public async Task checkAuctions(string guildId)
 		{
 			var foundAH = await getAHAsync(guildId);
@@ -49,6 +54,9 @@ namespace CollectibleBot.Modules.Utils
 
 		}
 
+		// Check if the markets exist for the guild, if they don't, then attempt to generate them
+		// This is really just double checking if an Item was created or added wrong, then creating/editing the correct
+		// market value for it.
 		public async Task checkMarkets(string guildId)
 		{
 			List<Market> correctMarkets = getMarkets(guildId);
@@ -61,6 +69,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Attempts to generate a market for each item
 		public async Task generateMarkets(string guildId)
 		{
 			List<Collectible> items = getCollectibles(guildId);
@@ -68,6 +77,9 @@ namespace CollectibleBot.Modules.Utils
 
 			foreach (Collectible item in items)
 			{
+				// Skip over items that already have a market value to avoid duplicates
+				if (getMarketValueAsync(item.Name, guildId) != null) continue;
+
 				_context.Markets.Add(new Market
 				{
 					guildId = guildId,
@@ -79,6 +91,7 @@ namespace CollectibleBot.Modules.Utils
 			await _context.SaveChangesAsync();
 		}
 
+		// Checks if a user exists within the DB. If not, generate a user for them.
 		public async Task checkUser(string userId, string guildId)
 		{
 			var found = await getUserAsync(userId, guildId);
@@ -98,6 +111,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Finds an item by name
 		public Collectible findItem(string name, string guildId)
 		{
 			try
@@ -121,6 +135,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Returns all items with a specific rarity
 		public List<Collectible> findItems(int rarity, string guildId)
 		{
 			try
@@ -145,6 +160,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Gets the Market object for an object
 		public async Task<Market> getMarketValueAsync(string name, string guildId)
 		{
 			try
@@ -158,6 +174,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Gets the Auction House for a guild
 		public async Task<AuctionHouse> getAHAsync(string guildId)
 		{
 			try
@@ -171,6 +188,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Gets a User object
 		public async Task<User> getUserAsync(string userId, string guildId)
 		{
 			try
@@ -184,6 +202,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Gets all of the Markets in the guild
 		public List<Market> getMarkets(string guildId)
 		{
 			try
@@ -201,6 +220,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Gets all of the Collectibles in the guild
 		public List<Collectible> getCollectibles(string guildId)
 		{
 			try
@@ -218,6 +238,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Gets all of the Users in a guild
 		public List<User> getUsers(string guildId)
 		{
 			try
@@ -235,6 +256,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Deletes an item based on the name
 		public async Task<bool> removeItem(string name, string guildId)
 		{
 			Collectible item = findItem(name, guildId);
