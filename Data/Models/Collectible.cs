@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace maebot.Data.Models
+namespace CollectibleBot.Data.Models
 {
 	public class Collectible
 	{
@@ -23,10 +23,10 @@ namespace maebot.Data.Models
 
         // The max rarity the collectible can be
         // 1 common, 2 uncommon, 3 rare, 4 epic, 5 legendary
-        public int MaxRarity { get; set; }
+        public int MaxRarity { get; set; } = 0;
 
         // The minimum rarity the collectible can be
-        public int MinRarity { get; set; }
+        public int MinRarity { get; set; } = 0;
 
         // The median price. This is affected by the rarity
         // and fluctuation.
@@ -34,8 +34,83 @@ namespace maebot.Data.Models
         public int Price { get; set; }
 
         // The max percentage price fluctuation.
-        // minimum Flux is 0. Flux changes every hour.
+        // The minimum flucutation is always -25
+        // just to keep the price positive always.
         public int Flux { get; set; }
+
+        // For use within code to see the effect of rarities
+        public int generateRarity()
+		{
+            Random rand = new();
+            return rand.Next(MinRarity, MaxRarity);
+		}
+
+        // Generate price can work in 2 seperate ways:
+        // 1. To get a market price adjustment with no rarity
+        // 2. To generate an item for a user to claim.
+        public double generatePrice(int rarity = 0)
+		{
+            Random rand = new();
+
+            double newFlux = (double) rand.Next(-25, Flux) / 100f;
+            Console.WriteLine($"Generated Flux: {newFlux}");
+            double newPrice = Price + (Price * newFlux);
+            Console.WriteLine($"Generated Price: {newPrice}");
+            if (rarity != 0)
+			{
+                newPrice *= getRarityMult(rarity);
+			}
+
+            return newPrice;
+		}
+
+        public int getRarityMult(int rarity)
+        {
+            Random rand = new();
+            int flux = rand.Next(Flux, 100);
+            int bonus = rarity + (rarity * (flux / 100));
+
+            return bonus;
+        }
+
+        public string rarityToString(int rarity)
+		{
+            switch (rarity)
+			{
+                case 1:
+                    return "Common";
+                case 2:
+                    return "Uncommon";
+                case 3:
+                    return "Rare";
+                case 4:
+                    return "Epic";
+                case 5:
+                    return "Legendary";
+			}
+
+            return "Unknown";
+		}
+
+        public bool hasRarity(int rarity)
+		{
+            if (MinRarity == rarity)
+			{
+                return true;
+			}
+            if (MaxRarity == rarity)
+			{
+                return true;
+			}
+            return false;
+		}
+
+        public static implicit operator Item(Collectible c) => new Item
+        {
+            Name = c.Name,
+            Rarity = c.generateRarity(),
+            Price = c.Price
+        };
 
     }
 }
