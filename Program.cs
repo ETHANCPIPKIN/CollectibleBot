@@ -24,10 +24,17 @@ namespace CollectibleBot
 		private InteractionService _interact;
 		private DbUtil _util;
 		private BotDb _context;
+		private DropUtil _drop;
 		private IServiceProvider _services;
 		private CommandHandler _handler;
 
 		const int MINUTE = 60000;
+
+		private int FluxCount = 0;
+		private int DropCount = 0;
+
+		Random rand = new();
+		private Timer Tick = new(10 * MINUTE);
 
 		static Task Main(string[] args) => new Program().MainAsync();
 
@@ -48,6 +55,7 @@ namespace CollectibleBot
 			_interact = _services.GetService<InteractionService>();
 			_handler = _services.GetService<CommandHandler>();
 			_util = _services.GetService<DbUtil>();
+			_drop = _services.GetService<DropUtil>();
 
 			Console.WriteLine("Instantiated services...");
 
@@ -67,12 +75,31 @@ namespace CollectibleBot
 
 		}
 
+		private void TickEvent(object source, ElapsedEventArgs e)
+		{
+			FluxCount -= rand.Next(5, 25);
+			DropCount -= rand.Next(2, 10);
+		}
+
+		private void updateFlux()
+		{
+			FluxCount = rand.Next(50, 150);
+		}
+
+		private void updateDrop()
+		{
+			DropCount = rand.Next(25, 100);
+		}
+
 		public async Task ClientReady()
 		{
 
 			_handler = new CommandHandler(_services);
 
 			await _handler.InstallCommandsAsync();
+
+			updateFlux();
+			updateDrop();
 
 			Console.WriteLine("[STARTUP] CollectibleBot Online!");
 		}
@@ -87,6 +114,53 @@ namespace CollectibleBot
 			string guildId = channel.Guild.Id.ToString();
 
 			await _util.checkDb(guildId, message.Author.Id.ToString());
+
+			if (message.Content == "!dropadmin" && message.Author.Id == 244905511969882112) DropCount = 0;
+			if (message.Content == "!fluxadmin" && message.Author.Id == 244905511969882112) FluxCount = 0;
+
+			if (FluxCount <= 0)
+			{
+				Console.WriteLine("Running Flux");
+				List<Market> markets = _util.getMarkets(guildId);
+
+				Console.WriteLine("Applying Updates");
+				foreach (Market market in markets)
+				{
+					Collectible c = _util.findItem(market.name, guildId);
+					Console.WriteLine($"{c.Name} | ${c.Price}");
+					market.price = (double) Decimal.Round((decimal) c.generatePrice(), 2);
+					Console.WriteLine($"{market.name} | ${market.price}");
+				}
+
+				Console.WriteLine("Saving Changes");
+				await _context.SaveChangesAsync();
+
+				Console.WriteLine("Updating Tick");
+				updateFlux();
+			}
+			else FluxCount--;
+
+			if (DropCount <= 0)
+			{
+				// Rolls a rarity to try to make the pool smaller
+				int rarity = _drop.rollRarity();
+				List<Collectible> pool = _util.findItems(rarity, guildId);
+
+				Random rand = new();
+				int chance = rand.Next(0, pool.Count);
+				Collectible dropped = pool[chance];
+
+				_drop.generateItem(dropped);
+				_drop.dropTimer.Start();
+
+				await channel.Guild.SystemChannel.SendMessageAsync(embed: _drop.dropEmbed(channel.Guild).Build(), components: _drop.claimComponents().Build());
+
+				updateDrop();
+			}
+			else DropCount--;
+
+			Console.WriteLine($"FluxCount: {FluxCount}");
+			Console.WriteLine($"DropCount: {DropCount}");
 
 		}
 
