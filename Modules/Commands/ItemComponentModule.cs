@@ -37,17 +37,22 @@ namespace CollectibleBot.Modules.Commands
 			var originalMessage = Context.Interaction;
 			bool correct = false;
 
+			// Acknowledge the interaction so Discord does not error
 			await originalMessage.DeferAsync();
 
+			// Wrap this in a loop for validation
 			while (!correct)
 			{
 				var m = await ReplyAsync("Type the name you wish to use:");
 				SocketMessage response = null;
 
+				// Gets the next message sent by the user
 				response = _interact.NextMessageAsync().Result.Value;
 
+				// If there's no response, skip to the next loop
 				if (response == null) continue;
 
+				// Make sure that the user is not creating a duplicate item
 				Collectible collectible = _utils.findItem(response.Content, Context.Guild.Id.ToString());
 				if (collectible != null)
 				{
@@ -65,6 +70,7 @@ namespace CollectibleBot.Modules.Commands
 				await m.DeleteAsync();
 			}
 
+			// Update the data in the original message
 			await originalMessage.Message.ModifyAsync(x =>
 			{
 				x.Embed = _item.ItemEmbed(Context).Build();
@@ -80,6 +86,7 @@ namespace CollectibleBot.Modules.Commands
 			var originalMessage = Context.Interaction;
 			bool correct = false;
 
+			// Acknowledge the interaction so Discord does not error
 			await originalMessage.DeferAsync();
 
 			while (!correct)
@@ -87,10 +94,13 @@ namespace CollectibleBot.Modules.Commands
 				var m = await ReplyAsync("Type the median price of the collectible (must be a whole number):");
 				SocketMessage response = null;
 
+				// Gets the next message sent by the user
 				response = _interact.NextMessageAsync().Result.Value;
 
+				// If there's no response, skip to the next loop
 				if (response == null) continue;
 
+				// Check that the response is a number.
 				if (int.TryParse(response.Content, out int amt))
 				{
 					_item.item.Price = amt;
@@ -107,6 +117,7 @@ namespace CollectibleBot.Modules.Commands
 				await m.DeleteAsync();
 			}
 
+			// Update the data in the original message
 			await originalMessage.Message.ModifyAsync(x =>
 			{
 				x.Embed = _item.ItemEmbed(Context).Build();
@@ -125,15 +136,19 @@ namespace CollectibleBot.Modules.Commands
 			bool correct = false;
 			SocketMessage response = null;
 
+			// Acknowledge the interaction so Discord does not error
 			await originalMessage.DeferAsync();
 
 			while (!correct)
 			{
+				// Gets the next message sent by the user
 				response = _interact.NextMessageAsync().Result.Value;
 
+				// If there's no response, skip to the next loop
 				if (response == null) continue;
 
-				if (int.TryParse(response.Content, out int amt) && amt > 1 && amt < 100)
+				// Check that the response is a number.
+				if (int.TryParse(response.Content, out int amt) && amt >= 1 && amt =< 100)
 				{
 					_item.item.Flux = amt;
 					correct = true;
@@ -146,6 +161,7 @@ namespace CollectibleBot.Modules.Commands
 				}
 			}
 
+			// Update the data in the original message
 			await originalMessage.Message.ModifyAsync(x =>
 			{
 				x.Embed = _item.ItemEmbed(Context).Build();
@@ -165,6 +181,7 @@ namespace CollectibleBot.Modules.Commands
 			bool correct = false;
 			int rarity = 0;
 
+			// Acknowledge the interaction
 			await original.DeferAsync();
 
 			while (!correct)
@@ -174,11 +191,13 @@ namespace CollectibleBot.Modules.Commands
 				// Wait for a user to press the button
 				var result = await _interact.NextMessageComponentAsync(x => x.Message.Id == msg.Id, timeout: TimeSpan.FromSeconds(120));
 
+				// Acknowledge the interaction
 				if (result.IsSuccess)
 				{
 					await result.Value!.DeferAsync();
 				}
 
+				// Check if the rarity is higher than Max, if defined
 				rarity = int.Parse(result.Value.Data.CustomId);
 				if (rarity > _item.item.MaxRarity && _item.item.MaxRarity != 0)
 				{
@@ -209,6 +228,7 @@ namespace CollectibleBot.Modules.Commands
 			bool correct = false;
 			int rarity = 0;
 
+			// Acknowledge the interaction
 			await original.DeferAsync();
 
 			while (!correct)
@@ -218,11 +238,13 @@ namespace CollectibleBot.Modules.Commands
 				// Wait for a user to press the button
 				var result = await _interact.NextMessageComponentAsync(x => x.Message.Id == msg.Id, timeout: TimeSpan.FromSeconds(120));
 
+				// Acknowledge the interaction
 				if (result.IsSuccess)
 				{
 					await result.Value!.DeferAsync();
 				}
 
+				// Check if the rarity is lower than Min
 				rarity = int.Parse(result.Value.Data.CustomId);
 				if (rarity < _item.item.MinRarity)
 				{
@@ -253,6 +275,8 @@ namespace CollectibleBot.Modules.Commands
 			Collectible item = _item.item;
 			var original = Context.Interaction;
 
+			// Checks if all variables have been entered, if not, reapply the interaction to the original message
+			// for the user to continue editing
 			if (item.Name == null || item.Flux == 0 || item.Price == 0 || item.MinRarity < 1 || item.MaxRarity < 1)
 			{
 				Console.WriteLine($"\tMissing some information!\n\t\t{item.Name} | ${item.Price}\n\t\t{item.MinRarity}, {item.MaxRarity}, %{item.Flux}");
@@ -272,6 +296,7 @@ namespace CollectibleBot.Modules.Commands
 				return;
 			}
 
+			// Double-checking that there are no duplicate names
 			Collectible test = _utils.findItem(item.Name, Context.Guild.Id.ToString());
 			if (test != null && item.Name == test.Name && !_item.Edit)
 			{
@@ -294,6 +319,8 @@ namespace CollectibleBot.Modules.Commands
 
 			Console.WriteLine("\tPassed all checks...");
 
+			// If ItemUtil is in edit mode, we don't want to add a brand new entry to the db.
+			// This check skips over any new entries, straight to saving changes
 			if (!_item.Edit)
 			{
 

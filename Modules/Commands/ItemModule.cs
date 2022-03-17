@@ -47,6 +47,7 @@ namespace CollectibleBot.Modules.Commands
 		[SlashCommand("create", "Bring up the dialogue to create a new item")]
 		public async Task Create()
 		{
+			// Instantiate a new Collectible and autofill the GuildId
 			_item.item = new Collectible
 			{
 				GuildId = Context.Guild.Id.ToString()
@@ -59,14 +60,16 @@ namespace CollectibleBot.Modules.Commands
 		public async Task Edit(
 			[Summary("Name", "The name of the item to edit")] string name)
 		{
-			Collectible item = _utils.findItem(name, Context.Guild.Id.ToString());
 
+			// Check if the collectible exists
+			Collectible item = _utils.findItem(name, Context.Guild.Id.ToString());
 			if (item == null)
 			{
 				await RespondAsync($"No item with the name \"{name}\" was found!", ephemeral: true);
 				return;
 			}
 
+			// If the collectible exists, set the current item to it and put ItemUtil into edit mode
 			_item.item = item;
 			_item.setEditMode(true, _ctx);
 

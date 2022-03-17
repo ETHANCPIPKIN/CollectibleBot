@@ -34,6 +34,7 @@ namespace CollectibleBot.Modules.Commands
 		{
 			UserId = Context.User.Id.ToString();
 			GuildId = Context.Guild.Id.ToString();
+
 			EmbedBuilder embed = new EmbedBuilder
 			{
 				Author = new EmbedAuthorBuilder
@@ -47,6 +48,7 @@ namespace CollectibleBot.Modules.Commands
 
 			};
 
+			// Get the AH for the guild and check if there are Listings
 			AuctionHouse ah = await _util.getAHAsync(GuildId);
 			if (ah.listings.Count < 1)
 			{
@@ -60,6 +62,7 @@ namespace CollectibleBot.Modules.Commands
 				return;
 			}
 
+			// If there are, fill in the embed with the listing info
 			foreach (Item item in ah.listings)
 			{
 				Collectible c = _util.findItem(item.Name, GuildId);
@@ -78,22 +81,22 @@ namespace CollectibleBot.Modules.Commands
 			GuildId = Context.Guild.Id.ToString();
 			UserId = Context.User.Id.ToString();
 
+			// These acknowledge the interaction so Discord doesn't error out
 			await Context.Interaction.DeferAsync();
 			await Context.Interaction.DeleteOriginalResponseAsync();
 
+			// Validity checks to check if the item exists, if it exists as a listing, or if the user can buy it
 			if (_util.findItem(name, GuildId) == null)
 			{
 				await RespondAsync("No item with that name exists! Make sure you're using proper capitalization!", ephemeral: true);
 				return;
 			}
-
 			AuctionHouse ah = await _util.getAHAsync(GuildId);
 			if (ah.listings.Count < 1)
 			{
 				await RespondAsync("There's nothing in the Auction House yet! Wait for someone to sell an item or wait for an item drop!");
 				return;
 			}
-
 			Item item;
 			if (rarity != 0) item = ah.getItem(name, rarity);
 			else item = ah.getItem(name);
@@ -103,7 +106,6 @@ namespace CollectibleBot.Modules.Commands
 				await RespondAsync("That item isn't in the Auction House yet! Wait for someone to sell an item or wait for an item drop!", ephemeral: true);
 				return;
 			}
-
 			User user = await _util.getUserAsync(UserId, GuildId);
 			if (user.coins < item.Price)
 			{
@@ -111,10 +113,12 @@ namespace CollectibleBot.Modules.Commands
 				return;
 			}
 
+			// After all checks, send a confirmation with all needed information
 			double sold = (double) Decimal.Round((decimal) (item.Price + (item.Price * 0.05f)), 2);
 			var msg = await ReplyAsync(embed: EmbedUtil.MarketConfirmPurchase(Context, _util, item, user, sold).Build(), components: MarketUtil.ConfirmComponents().Build());
 			var result = await _interact.NextMessageComponentAsync(x => x.Message.Id == msg.Id, timeout: TimeSpan.FromSeconds(120));
 
+			// Acknowledge the interaction so Discord does not error
 			if (result.IsSuccess) await result.Value!.DeferAsync();
 
 			await msg.DeleteAsync();
@@ -127,6 +131,7 @@ namespace CollectibleBot.Modules.Commands
 				return;
 			}
 
+			// Transfer the item from the listings to the user, and subtract the amount of coins
 			ah.listings.Remove(item);
 			user.coins -= sold;
 			user.items.Add(item);

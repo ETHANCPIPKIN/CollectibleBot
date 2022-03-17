@@ -34,6 +34,8 @@ namespace CollectibleBot.Modules.Commands
 		{
 			UserId = Context.User.Id.ToString();
 			GuildId = Context.Guild.Id.ToString();
+
+			// Initialize the embed with basic info
 			EmbedBuilder embed = new EmbedBuilder
 			{
 				Author = new EmbedAuthorBuilder
@@ -48,6 +50,7 @@ namespace CollectibleBot.Modules.Commands
 
 			};
 
+			// Get all collectibles from the guild, if there are none, return with a message
 			List<Collectible> items = _util.getCollectibles(GuildId);
 			if (items == null || items.Count == 0 || _util.getMarkets(GuildId) == null || _util.getMarkets(GuildId).Count == 0)
 			{
@@ -61,12 +64,7 @@ namespace CollectibleBot.Modules.Commands
 				return;
 			}
 
-			Console.WriteLine(_util.getMarkets(GuildId).Count);
-			foreach (Market market in _util.getMarkets(GuildId))
-			{
-				Console.WriteLine($"{market.name}: {market.price}");
-			}
-
+			// Go through all the collectibles and get all necessary data to display
 			foreach (Collectible item in items)
 			{
 				Market market = await _util.getMarketValueAsync(item.Name, GuildId);
@@ -91,16 +89,17 @@ namespace CollectibleBot.Modules.Commands
 			UserId = Context.User.Id.ToString();
 			GuildId = Context.Guild.Id.ToString();
 
+			// Acknowledge the interaction
 			await Context.Interaction.DeferAsync();
 			await Context.Interaction.DeleteOriginalResponseAsync();
 
+			// Checks for if the item exists and if the user has said item
 			Collectible c = _util.findItem(name, GuildId);
 			if (c == null)
 			{
 				await RespondAsync("No item with that name exists! Make sure you're using proper capitalization!", ephemeral: true);
 				return;
 			}
-			
 			User user = await _util.getUserAsync(UserId, GuildId);
 			Item item;
 			if (rarity != 0) item = user.getItem(name, rarity);
@@ -112,14 +111,19 @@ namespace CollectibleBot.Modules.Commands
 				return;
 			}
 
+			// Get the Market Value of the item
 			Market market = await _util.getMarketValueAsync(name, GuildId);
+			// Get the Auction House to place the item in
 			AuctionHouse ah = await _util.getAHAsync(GuildId);
 
+			// Apply the rarity multiplier to the market price, using Decimal.Round to get it to 2 decimal points.
 			double sold = (double)Decimal.Round((decimal)market.price * c.getRarityMult(item.Rarity), 2);
 
+			// Ask for confirmation
 			var msg = await ReplyAsync(embed: EmbedUtil.MarketConfirmSell(Context, _util, item, sold).Build(), components: MarketUtil.ConfirmComponents().Build());
 			var result = await _interact.NextMessageComponentAsync(x => x.Message.Id == msg.Id, timeout: TimeSpan.FromSeconds(120));
 
+			// Acknowledge the interaction
 			if (result.IsSuccess) 
 			{
 				await result.Value!.DeferAsync();
@@ -135,18 +139,17 @@ namespace CollectibleBot.Modules.Commands
 				return;
 			}
 
-			Console.WriteLine("Confirmed sell.");
+			// Remove the item from the user inventory and add the coins to them.
 			user.items.Remove(item);
-			Console.WriteLine("Removed item.");
 			user.coins += sold;
-			Console.WriteLine("Added coins.");
+			// Create a new item using info from the old item and the sell price.
+			// This is so that the Auction House has the actual sell price instead of the regular item price
 			ah.listings.Add(new Item
 			{
 				Name = item.Name,
 				Price = sold,
 				Rarity = item.Rarity
 			});
-			Console.WriteLine("Listed!");
 
 			await _ctx.SaveChangesAsync();
 			Console.WriteLine("Saved");

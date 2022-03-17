@@ -38,24 +38,5 @@ namespace CollectibleBot.Data.Models
 
             return "Unknown";
         }
-
-        public static int stringToRarity(string rarity)
-		{
-            switch (rarity.ToLower())
-			{
-                case "common":
-                    return 1;
-                case "uncommon":
-                    return 2;
-                case "rare":
-                    return 3;
-                case "epic":
-                    return 4;
-                case "legendary":
-                    return 5;
-			}
-
-            return 0;
-		}
     }
 }

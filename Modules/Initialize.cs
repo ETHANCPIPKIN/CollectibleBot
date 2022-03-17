@@ -17,8 +17,12 @@ using CollectibleBot.Modules.Utils;
 
 namespace CollectibleBot.Modules
 {
+
+	// Initialize is an incredibly essential part to this whole bot, as it builds the services and
+	// loads the ENV keys, which are used to login to both the DB and the Bot User
 	public class Initialize
 	{
+		// All services should be declared here.
 		private readonly CommandService _commands;
 		private readonly DiscordSocketClient _client;
 		private readonly BotDb _ctx;
@@ -28,6 +32,7 @@ namespace CollectibleBot.Modules
 		private readonly ItemUtil _item;
 		private readonly DropUtil _drop;
 
+		// All services should then be assigned within the constructor
 		public Initialize(
 			CommandService commands = null,
 			DiscordSocketClient client = null,
@@ -49,11 +54,14 @@ namespace CollectibleBot.Modules
 			_ctx = ctx ?? new BotDb();
 			_interact = interact ?? new InteractionService(_client);
 			_interactive = interactive ?? new InteractiveService(_client);
-			_util = util ?? new DbUtil(_client, _ctx);
+			_util = util ?? new DbUtil(_ctx);
 			_item = item ?? new ItemUtil();
 			_drop = drop ?? new DropUtil(_ctx);
 		}
 
+		// This builds the service provider and returns it, it is meant to be called only once
+		// during startup. All services should be declared and assigned within the constructor
+		// to avoid any errors and redundancies.
 		public IServiceProvider BuildServiceProvider() =>
 			new ServiceCollection()
 				.AddSingleton(_client)
@@ -66,6 +74,7 @@ namespace CollectibleBot.Modules
 				.AddSingleton(_drop)
 				.BuildServiceProvider();
 
+		// This loads the DotEnv package and loads the ENV file
 		public void LoadEnv()
 		{
 			DotEnv.Fluent()

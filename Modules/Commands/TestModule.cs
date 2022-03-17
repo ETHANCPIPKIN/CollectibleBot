@@ -14,10 +14,11 @@ namespace CollectibleBot.Modules.Commands
 			Console.WriteLine("Started Test Module");
 		}
 
+		// Simply a test to see if the bot works
 		[SlashCommand("hello", "Hello World!")]
 		public async Task Hello()
 		{
-			await ReplyAsync("Hello!");
+			await RespondAsync("Hello!");
 		}
 
 	}

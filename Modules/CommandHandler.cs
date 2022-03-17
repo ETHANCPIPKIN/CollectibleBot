@@ -34,20 +34,25 @@ namespace CollectibleBot.Modules
 
 		public async Task InstallCommandsAsync()
 		{
-			Console.WriteLine("Adding events...");
+			// Add Action Events for whenever the user interacts with the bot
 			_client.SlashCommandExecuted += HandleInteractionCommandAsync;
 			_client.SelectMenuExecuted += HandleComponentInteractionAsync;
 			_client.ButtonExecuted += HandleComponentInteractionAsync;
 
-			Console.WriteLine("Adding modules...");
+			// Load all of the Modules into the interact service.
+			// This just takes all of the public modules that inherit
+			// some version of InterationModuleBase.
 			await _interact.AddModulesAsync(Assembly.GetEntryAssembly(), _services);
-			Console.WriteLine("Modules added!");
 
-			Console.WriteLine("Registering commands...");
+			// Register commands to test guild for quicker access
 			await _interact.RegisterCommandsToGuildAsync(951307889857933353);
-			Console.WriteLine("Registered commands!");
 
-			Console.WriteLine("Adding logging...");
+			// Register commands globally.
+			// This takes about 30 minutes to an hour to take full effect,
+			// just due to Discord's functions.
+			await _interact.RegisterCommandsGloballyAsync();
+
+			// Add Logging Events to display information about what is happening within interactions
 			_interact.SlashCommandExecuted += SlashCommandExecuted;
 			_interact.ContextCommandExecuted += ContextCommandExecuted;
 			_interact.ComponentCommandExecuted += ComponentCommandExecuted;
@@ -79,6 +84,7 @@ namespace CollectibleBot.Modules
 		}
 		*/
 
+		// This tries to execute a command from a Component (i.e: Button/Menu)
 		private async Task HandleComponentInteractionAsync(SocketMessageComponent interact)
 		{
 			try
@@ -103,6 +109,7 @@ namespace CollectibleBot.Modules
 			}
 		}
 
+		// This tries to execute a command from a User (i.e: Slash Command)
 		private async Task HandleInteractionCommandAsync(SocketInteraction interact)
 		{
 			try

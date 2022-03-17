@@ -10,6 +10,9 @@ using CollectibleBot.Data;
 
 namespace CollectibleBot.Modules.Utils
 {
+	// The DropUtil holds an Item that is generated whenever a Drop happens in the Program
+	// Any user can claim the item as long as it is collected within one minute, otherwise
+	// the item is marked as unclaimable (canCollect = false)
 	public class DropUtil
 	{
 		public Item drop;
@@ -24,11 +27,12 @@ namespace CollectibleBot.Modules.Utils
 			_ctx = ctx;
 			drop = null;
 
-			dropTimer = new(2 * MINUTE);
+			dropTimer = new(MINUTE);
 			dropTimer.Elapsed += updateCollect;
 			dropTimer.AutoReset = false;
 		}
 
+		// Generates a random item to hold as a drop
 		public void generateItem(Collectible c)
 		{
 			int rarity = rollRarity();
@@ -43,7 +47,8 @@ namespace CollectibleBot.Modules.Utils
 			drop = item;
 		}
 
-		// For use with dropping items the chances are:
+		// For use with dropping items.
+		// The chances are:
 		// 50% Common, 20% Uncommon, 15% Rare, 10% Epic, 5% Legendary
 		public int rollRarity()
 		{
@@ -58,6 +63,7 @@ namespace CollectibleBot.Modules.Utils
 
 		}
 
+		// Builds the embed to display information about the drop
 		public EmbedBuilder dropEmbed(IGuild guild)
 		{
 			var embed = new EmbedBuilder
@@ -75,6 +81,7 @@ namespace CollectibleBot.Modules.Utils
 			return embed;
 		}
 
+		// Builds the Claim button to attach to the embed
 		public ComponentBuilder claimComponents()
 		{
 			var component = new ComponentBuilder()
@@ -83,11 +90,13 @@ namespace CollectibleBot.Modules.Utils
 			return component;
 		}
 
+		// This is for when the Timer elapses, to make the item unclaimable
 		private void updateCollect(object source, ElapsedEventArgs e)
 		{
 			canCollect = false;
 		}
 
+		// Checks if the item can be claimed, if it can, update the User's inventory accordingly
 		public async Task<bool> claimItem(User user)
 		{
 			if (!canCollect || drop == null) return false;

@@ -10,9 +10,14 @@ using System.Threading.Tasks;
 
 namespace CollectibleBot.Modules.Utils
 {
+	// The ItemUtil holds a Collectible that gets edited via the item commands.
+	// ItemUtil should be instantiated per guild, so no errors should occur cross-guild.
 	public class ItemUtil
 	{
 		public Collectible item;
+
+		// Edit is mostly referenced in ItemComponentModule as a means
+		// to avoid duplicating items while editing
 		public bool Edit = false;
 
 		public ItemUtil()
@@ -20,6 +25,8 @@ namespace CollectibleBot.Modules.Utils
 			item = new Collectible();
 		}
 
+		// This mainly checks if Edit is true.
+		// If it is, track any changes made to item.
 		public void setEditMode(bool mode, BotDb ctx)
 		{
 			Edit = mode;
@@ -29,6 +36,7 @@ namespace CollectibleBot.Modules.Utils
 			}
 		}
 
+		// Builds the basic item information embed for use in editing/creating items.
 		public EmbedBuilder ItemEmbed(IInteractionContext Context)
 		{
 			var embed = new EmbedBuilder
@@ -67,6 +75,7 @@ namespace CollectibleBot.Modules.Utils
 			return embed;
 		}
 
+		// Builds the components to create/edit an item
 		public ComponentBuilder ItemComponents()
 		{
 			var component = new ComponentBuilder();
@@ -86,6 +95,8 @@ namespace CollectibleBot.Modules.Utils
 			return component;
 		}
 
+		// Builds the components to select a minimum rarity, with logic
+		// to avoid any errors.
 		public ComponentBuilder ItemMinRarityComponents()
 		{
 			var component = new ComponentBuilder();
@@ -104,6 +115,8 @@ namespace CollectibleBot.Modules.Utils
 			return component;
 		}
 
+		// Builds the components to select a maximum rarity, with logic
+		// to avoid any errors.
 		public ComponentBuilder ItemMaxRarityComponents()
 		{
 			var component = new ComponentBuilder();

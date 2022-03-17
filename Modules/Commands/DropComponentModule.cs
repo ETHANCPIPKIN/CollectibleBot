@@ -26,11 +26,13 @@ namespace CollectibleBot.Modules.Commands
 		[ComponentInteraction("drop-claim")]
 		public async Task claim()
 		{
-
+			// Acknowledge the interaction so Discord does not error
 			await Context.Interaction.DeferAsync();
 
+			// Get user from DB
 			User user = _utils.getUserAsync(Context.User.Id.ToString(), Context.Guild.Id.ToString()).Result;
 
+			// Call the claimItem to claim the item and test for the result
 			if (_drop.claimItem(user).Result)
 			{
 				await ReplyAsync($"{Context.User.Username} claimed the {Item.rarityToString(_drop.drop.Rarity)} {_drop.drop.Name}!");

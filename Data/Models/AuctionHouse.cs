@@ -17,8 +17,10 @@ namespace CollectibleBot.Data.Models
 
 		public string guildId { get; set; }
 
+		// Every item sold is stored in this list
 		public List<Item> listings { get; set; }
 
+		// Gets an item from the list by name
 		public Item getItem(string name)
 		{
 			foreach (Item item in listings)
@@ -29,6 +31,7 @@ namespace CollectibleBot.Data.Models
 			return null;
 		}
 
+		// Gets an item from the list by name and rarity
 		public Item getItem(string name, int rarity)
 		{
 			foreach (Item item in listings)
